@@ -255,15 +255,6 @@
             const TOTAL_IMAGES = 50; 
             const IMAGE_BASE_URL = "https://meet-167.github.io/Ombre/images/";
 
-            // Helper: auto-generate image list from repo
-const getAllRepoImages = (total = 50) => {
-    const base = "https://meet-167.github.io/Ombre/images/";
-    const arr = [];
-    for (let i = 1; i <= total; i++) {
-        arr.push(`${base}img${i}.jpg`);
-    }
-    return arr;
-};
 
             const filteredDesigns = designs.filter(design => {
                 const matchesSearch = design.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
