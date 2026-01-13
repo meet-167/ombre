@@ -493,101 +493,121 @@
             );
         };
 
-        // Design Form Component
-        const DesignForm = ({ design, onClose, onSave }) => {
-            const [formData, setFormData] = useState(design || {
-                title: '',
-                price: '',
-                imageUrl: '',
-                category: '',
-                color: '',
-                tags: [],
-                isSeasonal: false
-            });
+        const DesignForm = ({ design, onClose, onSave, allDesigns }) => {
+    // State for the form
+    const [formData, setFormData] = useState(design || {
+        title: '',
+        price: '',
+        imageUrl: '',
+        category: '',
+        color: '',
+        tags: [],
+        isSeasonal: false
+    });
 
-            const handleSubmit = async (e) => {
-                e.preventDefault();
-                const newDesign = {
-                    ...formData,
-                    id: design?.id || Date.now().toString(),
-                    price: parseFloat(formData.price),
-                    createdAt: design?.createdAt || Date.now()
-                };
+    // Generate list of available images (filtering out those already used)
+    const usedImages = allDesigns
+        .filter(d => d.id !== design?.id) // Don't filter out the current design's image if editing
+        .map(d => d.imageUrl);
 
-                try {
-                    if (design) {
-                        await DB.updateDesign(newDesign);
-                    } else {
-                        const savedDesign = await DB.saveDesign(newDesign);
-                        onSave(savedDesign);
-                        return;
-                    }
-                    onSave(newDesign);
-                } catch (error) {
-                    alert('Error saving design: ' + error.message);
-                }
-            };
+    const availableImages = Array.from({ length: TOTAL_IMAGES }, (_, i) => {
+        const url = `${IMAGE_BASE_URL}img${i + 1}.jpg`; // Adjust extension (.png/.jpg) as needed
+        return url;
+    }).filter(url => !usedImages.includes(url));
 
-            const toggleTag = (tag) => {
-                setFormData(prev => ({
-                    ...prev,
-                    tags: prev.tags.includes(tag)
-                        ? prev.tags.filter(t => t !== tag)
-                        : [...prev.tags, tag]
-                }));
-            };
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        if(!formData.imageUrl) return alert("Please select an image!");
+        
+        const newDesign = {
+            ...formData,
+            id: design?.id || Date.now().toString(),
+            price: parseFloat(formData.price),
+            createdAt: design?.createdAt || Date.now()
+        };
 
-            return (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-                    <div className="bg-white rounded-xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-                        <div className="flex justify-between items-center mb-6">
-                            <h3 className="text-2xl font-bold text-slate-800">
-                                {design ? 'Edit Design' : 'Add New Design'}
-                            </h3>
-                            <button onClick={onClose}>
-                                <X className="w-6 h-6 text-slate-600" />
-                            </button>
+        try {
+            if (design) {
+                await DB.updateDesign(newDesign);
+            } else {
+                const savedDesign = await DB.saveDesign(newDesign);
+                onSave(savedDesign);
+                return;
+            }
+            onSave(newDesign);
+        } catch (error) {
+            alert('Error saving design: ' + error.message);
+        }
+    };
+
+    const toggleTag = (tag) => {
+        setFormData(prev => ({
+            ...prev,
+            tags: prev.tags.includes(tag) ? prev.tags.filter(t => t !== tag) : [...prev.tags, tag]
+        }));
+    };
+
+    return (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                <div className="flex justify-between items-center mb-6">
+                    <h3 className="text-2xl font-bold text-slate-800">
+                        {design ? 'Edit Design' : 'Add New Design'}
+                    </h3>
+                    <button onClick={onClose}><X className="w-6 h-6 text-slate-600" /></button>
+                </div>
+
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    <input
+                        type="text"
+                        placeholder="Title"
+                        value={formData.title}
+                        onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                        className="w-full px-4 py-2 border rounded-lg"
+                        required
+                    />
+
+                    <input
+                        type="number"
+                        placeholder="Price (in ₹)"
+                        value={formData.price}
+                        onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                        className="w-full px-4 py-2 border rounded-lg"
+                        required
+                    />
+
+                    {/* IMAGE SELECTION GRID */}
+                    <div className="space-y-2">
+                        <label className="block text-sm font-medium text-slate-700">Select Design Image</label>
+                        <div className="grid grid-cols-4 gap-2 h-48 overflow-y-auto p-2 border rounded-lg bg-slate-50">
+                            {availableImages.map((url) => (
+                                <div 
+                                    key={url}
+                                    onClick={() => setFormData({...formData, imageUrl: url})}
+                                    className={`relative aspect-square cursor-pointer rounded-md overflow-hidden border-4 transition ${
+                                        formData.imageUrl === url ? 'border-pink-500' : 'border-transparent hover:border-pink-200'
+                                    }`}
+                                >
+                                    <img src={url} className="w-full h-full object-cover" loading="lazy" />
+                                    {formData.imageUrl === url && (
+                                        <div className="absolute inset-0 bg-pink-500/20 flex items-center justify-center">
+                                            <div className="bg-white rounded-full p-1"><Plus className="w-4 h-4 text-pink-600 rotate-45" /></div>
+                                        </div>
+                                    )}
+                                </div>
+                            ))}
                         </div>
+                        {formData.imageUrl && <p className="text-xs text-green-600">Selected: {formData.imageUrl.split('/').pop()}</p>}
+                    </div>
 
-                        <form onSubmit={handleSubmit} className="space-y-4">
-                            <input
-                                type="text"
-                                placeholder="Title"
-                                value={formData.title}
-                                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                                className="w-full px-4 py-2 border rounded-lg"
-                                required
-                            />
-
-                            <input
-                                type="number"
-                                placeholder="Price"
-                                value={formData.price}
-                                onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                                className="w-full px-4 py-2 border rounded-lg"
-                                required
-                                step="0.01"
-                            />
-
-                            <input
-                                type="url"
-                                placeholder="Image URL"
-                                value={formData.imageUrl}
-                                onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
-                                className="w-full px-4 py-2 border rounded-lg"
-                                required
-                            />
-
-                            <select
-                                value={formData.category}
-                                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                                className="w-full px-4 py-2 border rounded-lg"
-                            >
-                                <option value="">Select Service Type</option>
-                                {SERVICE_TYPES.map(service => (
-                                    <option key={service} value={service}>{service}</option>
-                                ))}
-                            </select>
+                    <select
+                        value={formData.category}
+                        onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                        className="w-full px-4 py-2 border rounded-lg"
+                    >
+                        <option value="">Select Service Type</option>
+                        {SERVICE_TYPES.map(service => <option key={service} value={service}>{service}</option>)}
+                    </select>
 
                             <select
                                 value={formData.color}
@@ -632,10 +652,7 @@
                                 <span className="text-sm text-slate-700">Seasonal Design</span>
                             </label>
 
-                            <button
-                                type="submit"
-                                className="w-full bg-pink-600 text-white py-3 rounded-lg hover:bg-pink-700"
-                            >
+                            <button type="submit" className="w-full bg-pink-600 text-white py-3 rounded-lg hover:bg-pink-700">
                                 {design ? 'Update Design' : 'Add Design'}
                             </button>
                         </form>
