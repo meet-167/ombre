@@ -1,4 +1,129 @@
-// Database Service using Firestore
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ombré Nail Salon</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // Suppress Tailwind CDN warning in console
+        window.tailwind = { config: {} };
+        console.warn = function(message) {
+            if (typeof message === 'string' && message.includes('cdn.tailwindcss.com')) return;
+            console.log(message);
+        };
+    </script>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Lato:wght@300;400;700&display=swap');
+        
+        body {
+            font-family: 'Lato', sans-serif;
+            background-color: #fdf2f8;
+        }
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Playfair Display', serif;
+        }
+        
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .animate-fade-in-up {
+            animation: fadeInUp 0.5s ease-out;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        // Initialize Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyAcGh8gLianDDvVnkBQTzE2KEnHCVxAbPg",
+            authDomain: "ombre-nail-salon.firebaseapp.com",
+            projectId: "ombre-nail-salon",
+            storageBucket: "ombre-nail-salon.firebasestorage.app",
+            messagingSenderId: "410031020310",
+            appId: "1:410031020310:web:a78744ffc62b7ec7ff9837",
+            measurementId: "G-L5LZX8SSX3"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // Lucide Icons as SVG components
+        const Sparkles = ({ className = "w-6 h-6" }) => (
+            <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+            </svg>
+        );
+
+        const Lock = ({ className = "w-6 h-6" }) => (
+            <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
+        );
+
+        const Loader2 = ({ className = "w-6 h-6" }) => (
+            <svg className={`${className} animate-spin`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+        );
+
+        const Search = ({ className = "w-6 h-6" }) => (
+            <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+        );
+
+        const Plus = ({ className = "w-6 h-6" }) => (
+            <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+        );
+
+        const Edit = ({ className = "w-6 h-6" }) => (
+            <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+            </svg>
+        );
+
+        const Trash2 = ({ className = "w-6 h-6" }) => (
+            <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+        );
+
+        const X = ({ className = "w-6 h-6" }) => (
+            <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+        );
+
+        // Database Service using Firestore
         const DB = {
             checkLogin: async (password) => {
                 try {
@@ -28,25 +153,651 @@
                 }
             },
 
-            getAvailableImages: async () => {
+            saveDesign: async (design) => {
                 try {
-                    const docRef = db.collection('config').doc('imageList');
-                    const doc = await docRef.get();
-                    if (doc.exists) {
-                        return doc.data().images || [];
-                    }
-                    return [];
+                    const docRef = await db.collection('designs').add(design);
+                    return { ...design, id: docRef.id };
                 } catch (error) {
-                    console.error('Error getting image list:', error);
-                    return [];
-                }
-            },
-
-            saveImageList: async (images) => {
-                try {
-                    await db.collection('config').doc('imageList').set({ images });
-                } catch (error) {
-                    console.error('Error saving image list:', error);
+                    console.error('Error saving design:', error);
+                    alert('Error saving design. Check Firestore rules - write permission needed.');
                     throw error;
                 }
             },
+
+            updateDesign: async (design) => {
+                try {
+                    const { id, ...data } = design;
+                    await db.collection('designs').doc(id).update(data);
+                    return design;
+                } catch (error) {
+                    console.error('Error updating design:', error);
+                    alert('Error updating design. Check Firestore rules.');
+                    throw error;
+                }
+            },
+
+            deleteDesign: async (id) => {
+                try {
+                    await db.collection('designs').doc(id).delete();
+                } catch (error) {
+                    console.error('Error deleting design:', error);
+                    alert('Error deleting design. Check Firestore rules.');
+                    throw error;
+                }
+            },
+
+            getSeasonalConfig: async () => {
+                try {
+                    const docRef = db.collection('config').doc('seasonal');
+                    const doc = await docRef.get();
+                    if (doc.exists) {
+                        return doc.data();
+                    }
+                    return { isActive: false, eventName: '' };
+                } catch (error) {
+                    console.error('Error getting seasonal config:', error);
+                    return { isActive: false, eventName: '' };
+                }
+            },
+
+            saveSeasonalConfig: async (config) => {
+                try {
+                    await db.collection('config').doc('seasonal').set(config);
+                    return config;
+                } catch (error) {
+                    console.error('Error saving seasonal config:', error);
+                    alert('Error saving seasonal config. Check Firestore rules.');
+                    throw error;
+                }
+            }
+        };
+
+        // Constants
+        const COLORS = [
+            "Red", "Blue", "Pink", "Nude", "Black", "White", "Gold", "Silver", "Purple", "Green", "Orange", "Yellow", "Multicolor"
+        ];
+
+        const SERVICE_TYPES = [
+            "Gel Polish", "Toe Gel Polish", "Gel Overlay", "Semi Extension", 
+            "Gel Extension", "Soft Gel Extension", "Refilling"
+        ];
+
+        const STYLES = [
+            "Ombre", "French", "Glitter", "Matte", "3D Art", "Minimalist", "Chrome", "Abstract", "Floral"
+        ];
+
+        // Header Component
+        const Header = ({ onAdminClick, onHomeClick }) => (
+            <header className="bg-white shadow-sm sticky top-0 z-50">
+                <div className="container mx-auto px-4 py-4 flex justify-between items-center">
+                    <button onClick={onHomeClick} className="flex items-center gap-2 hover:opacity-80 transition">
+                        <Sparkles className="w-8 h-8 text-pink-600" />
+                        <h1 className="text-2xl md:text-3xl font-bold text-slate-800">Ombré</h1>
+                    </button>
+                    <button 
+                        onClick={onAdminClick}
+                        className="text-slate-600 hover:text-pink-600 transition"
+                    >
+                        <Lock className="w-6 h-6" />
+                    </button>
+                </div>
+            </header>
+        );
+
+        // Client View Component
+        const ClientView = ({ designs, seasonalConfig }) => {
+            const [searchTerm, setSearchTerm] = useState('');
+            const [selectedColor, setSelectedColor] = useState('');
+            const [selectedService, setSelectedService] = useState('');
+            const [selectedStyle, setSelectedStyle] = useState('');
+
+            const filteredDesigns = designs.filter(design => {
+                const matchesSearch = design.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                    design.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
+                const matchesColor = !selectedColor || design.color === selectedColor;
+                const matchesService = !selectedService || design.category === selectedService;
+                const matchesStyle = !selectedStyle || design.tags.includes(selectedStyle);
+                return matchesSearch && matchesColor && matchesService && matchesStyle;
+            });
+
+            const seasonalDesigns = filteredDesigns.filter(d => d.isSeasonal);
+            const regularDesigns = filteredDesigns.filter(d => !d.isSeasonal);
+
+            return (
+                <main className="container mx-auto px-4 py-8">
+                    {/* Search and Filters */}
+                    <div className="mb-8 space-y-4">
+                        <div className="relative">
+                            <Search className="absolute left-3 top-3 text-slate-400 w-5 h-5" />
+                            <input
+                                type="text"
+                                placeholder="Search designs..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="w-full pl-10 pr-4 py-3 rounded-lg border border-slate-200 focus:ring-2 focus:ring-pink-500/20 outline-none"
+                            />
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <select
+                                value={selectedStyle}
+                                onChange={(e) => setSelectedStyle(e.target.value)}
+                                className="px-4 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-pink-500/20 outline-none"
+                            >
+                                <option value="">All Styles</option>
+                                {STYLES.map(style => (
+                                    <option key={style} value={style}>{style}</option>
+                                ))}
+                            </select>
+
+                            <select
+                                value={selectedColor}
+                                onChange={(e) => setSelectedColor(e.target.value)}
+                                className="px-4 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-pink-500/20 outline-none"
+                            >
+                                <option value="">All Colors</option>
+                                {COLORS.map(color => (
+                                    <option key={color} value={color}>{color}</option>
+                                ))}
+                            </select>
+
+                            <select
+                                value={selectedService}
+                                onChange={(e) => setSelectedService(e.target.value)}
+                                className="px-4 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-pink-500/20 outline-none"
+                            >
+                                <option value="">All Services</option>
+                                {SERVICE_TYPES.map(service => (
+                                    <option key={service} value={service}>{service}</option>
+                                ))}
+                            </select>
+                        </div>
+                    </div>
+
+                    {/* Seasonal Collection */}
+                    {seasonalConfig.isActive && seasonalDesigns.length > 0 && (
+                        <section className="mb-12">
+                            <h2 className="text-3xl font-bold text-slate-800 mb-6">
+                                {seasonalConfig.eventName}
+                            </h2>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                {seasonalDesigns.map(design => (
+                                    <DesignCard key={design.id} design={design} />
+                                ))}
+                            </div>
+                        </section>
+                    )}
+
+                    {/* Regular Gallery */}
+                    <section>
+                        <h2 className="text-3xl font-bold text-slate-800 mb-6">Gallery</h2>
+                        {regularDesigns.length === 0 ? (
+                            <p className="text-slate-500 text-center py-12">No designs found</p>
+                        ) : (
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                {regularDesigns.map(design => (
+                                    <DesignCard key={design.id} design={design} />
+                                ))}
+                            </div>
+                        )}
+                    </section>
+                </main>
+            );
+        };
+
+        // Design Card Component
+        const DesignCard = ({ design }) => (
+            <div className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition">
+                <div className="aspect-square bg-slate-100">
+                    <img
+                        src={design.imageUrl}
+                        alt={design.title}
+                        className="w-full h-full object-cover"
+                    />
+                </div>
+                <div className="p-4">
+                    <h3 className="text-xl font-bold text-slate-800 mb-2">{design.title}</h3>
+                    <p className="text-2xl font-bold text-pink-600 mb-3">₹{design.price}</p>
+                    <div className="flex flex-wrap gap-2">
+                        {design.category && (
+                            <span className="px-2 py-1 bg-pink-100 text-pink-700 text-xs rounded-full">
+                                {design.category}
+                            </span>
+                        )}
+                        {design.color && (
+                            <span className="px-2 py-1 bg-slate-100 text-slate-700 text-xs rounded-full">
+                                {design.color}
+                            </span>
+                        )}
+                        {design.tags.map(tag => (
+                            <span key={tag} className="px-2 py-1 bg-slate-100 text-slate-600 text-xs rounded-full">
+                                {tag}
+                            </span>
+                        ))}
+                    </div>
+                </div>
+            </div>
+        );
+
+        // Admin View Component
+        const AdminView = ({ 
+            onLogout, 
+            onDesignAdded, 
+            onDesignUpdated, 
+            onDesignDeleted, 
+            designs,
+            seasonalConfig,
+            onConfigUpdate 
+        }) => {
+            const [showForm, setShowForm] = useState(false);
+            const [editingDesign, setEditingDesign] = useState(null);
+
+            return (
+                <main className="container mx-auto px-4 py-8">
+                    <div className="flex justify-between items-center mb-8">
+                        <h2 className="text-3xl font-bold text-slate-800">Admin Panel</h2>
+                        <button
+                            onClick={onLogout}
+                            className="px-4 py-2 bg-slate-200 text-slate-700 rounded-lg hover:bg-slate-300"
+                        >
+                            Logout
+                        </button>
+                    </div>
+
+                    {/* Seasonal Config */}
+                    <SeasonalConfigForm 
+                        seasonalConfig={seasonalConfig}
+                        onConfigUpdate={onConfigUpdate}
+                    />
+
+                    {/* Add Design Button */}
+                    <button
+                        onClick={() => {
+                            setEditingDesign(null);
+                            setShowForm(true);
+                        }}
+                        className="mb-6 px-6 py-3 bg-pink-600 text-white rounded-lg hover:bg-pink-700 flex items-center gap-2"
+                    >
+                        <Plus className="w-5 h-5" />
+                        Add New Design
+                    </button>
+
+                    {/* Form Modal */}
+                    {showForm && (
+                        <DesignForm
+                            design={editingDesign}
+                            onClose={() => {
+                                setShowForm(false);
+                                setEditingDesign(null);
+                            }}
+                            onSave={(design) => {
+                                if (editingDesign) {
+                                    onDesignUpdated(design);
+                                } else {
+                                    onDesignAdded(design);
+                                }
+                                setShowForm(false);
+                                setEditingDesign(null);
+                            }}
+                        />
+                    )}
+
+                    {/* Designs List */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {designs.map(design => (
+                            <div key={design.id} className="bg-white rounded-xl shadow-lg overflow-hidden">
+                                <div className="aspect-square bg-slate-100">
+                                    <img
+                                        src={design.imageUrl}
+                                        alt={design.title}
+                                        className="w-full h-full object-cover"
+                                    />
+                                </div>
+                                <div className="p-4">
+                                    <h3 className="text-xl font-bold text-slate-800 mb-2">{design.title}</h3>
+                                    <p className="text-2xl font-bold text-pink-600 mb-3">${design.price}</p>
+                                    <div className="flex gap-2">
+                                        <button
+                                            onClick={() => {
+                                                setEditingDesign(design);
+                                                setShowForm(true);
+                                            }}
+                                            className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center justify-center gap-2"
+                                        >
+                                            <Edit className="w-4 h-4" />
+                                            Edit
+                                        </button>
+                                        <button
+                                            onClick={async () => {
+                                                if (confirm('Delete this design?')) {
+                                                    await DB.deleteDesign(design.id);
+                                                    onDesignDeleted(design.id);
+                                                }
+                                            }}
+                                            className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 flex items-center justify-center gap-2"
+                                        >
+                                            <Trash2 className="w-4 h-4" />
+                                            Delete
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </main>
+            );
+        };
+
+        // Design Form Component
+        const DesignForm = ({ design, onClose, onSave }) => {
+            const [formData, setFormData] = useState(design || {
+                title: '',
+                price: '',
+                imageUrl: '',
+                category: '',
+                color: '',
+                tags: [],
+                isSeasonal: false
+            });
+
+            const handleSubmit = async (e) => {
+                e.preventDefault();
+                const newDesign = {
+                    ...formData,
+                    id: design?.id || Date.now().toString(),
+                    price: parseFloat(formData.price),
+                    createdAt: design?.createdAt || Date.now()
+                };
+
+                try {
+                    if (design) {
+                        await DB.updateDesign(newDesign);
+                    } else {
+                        const savedDesign = await DB.saveDesign(newDesign);
+                        onSave(savedDesign);
+                        return;
+                    }
+                    onSave(newDesign);
+                } catch (error) {
+                    alert('Error saving design: ' + error.message);
+                }
+            };
+
+            const toggleTag = (tag) => {
+                setFormData(prev => ({
+                    ...prev,
+                    tags: prev.tags.includes(tag)
+                        ? prev.tags.filter(t => t !== tag)
+                        : [...prev.tags, tag]
+                }));
+            };
+
+            return (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+                    <div className="bg-white rounded-xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                        <div className="flex justify-between items-center mb-6">
+                            <h3 className="text-2xl font-bold text-slate-800">
+                                {design ? 'Edit Design' : 'Add New Design'}
+                            </h3>
+                            <button onClick={onClose}>
+                                <X className="w-6 h-6 text-slate-600" />
+                            </button>
+                        </div>
+
+                        <form onSubmit={handleSubmit} className="space-y-4">
+                            <input
+                                type="text"
+                                placeholder="Title"
+                                value={formData.title}
+                                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                                className="w-full px-4 py-2 border rounded-lg"
+                                required
+                            />
+
+                            <input
+                                type="number"
+                                placeholder="Price"
+                                value={formData.price}
+                                onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                                className="w-full px-4 py-2 border rounded-lg"
+                                required
+                                step="0.01"
+                            />
+
+                            <input
+                                type="url"
+                                placeholder="Image URL"
+                                value={formData.imageUrl}
+                                onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
+                                className="w-full px-4 py-2 border rounded-lg"
+                                required
+                            />
+
+                            <select
+                                value={formData.category}
+                                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                                className="w-full px-4 py-2 border rounded-lg"
+                            >
+                                <option value="">Select Service Type</option>
+                                {SERVICE_TYPES.map(service => (
+                                    <option key={service} value={service}>{service}</option>
+                                ))}
+                            </select>
+
+                            <select
+                                value={formData.color}
+                                onChange={(e) => setFormData({ ...formData, color: e.target.value })}
+                                className="w-full px-4 py-2 border rounded-lg"
+                            >
+                                <option value="">Select Color</option>
+                                {COLORS.map(color => (
+                                    <option key={color} value={color}>{color}</option>
+                                ))}
+                            </select>
+
+                            <div>
+                                <label className="block text-sm font-medium text-slate-700 mb-2">
+                                    Style Tags
+                                </label>
+                                <div className="flex flex-wrap gap-2">
+                                    {STYLES.map(style => (
+                                        <button
+                                            key={style}
+                                            type="button"
+                                            onClick={() => toggleTag(style)}
+                                            className={`px-3 py-1 rounded-full text-sm ${
+                                                formData.tags.includes(style)
+                                                    ? 'bg-pink-600 text-white'
+                                                    : 'bg-slate-100 text-slate-700'
+                                            }`}
+                                        >
+                                            {style}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <label className="flex items-center gap-2">
+                                <input
+                                    type="checkbox"
+                                    checked={formData.isSeasonal}
+                                    onChange={(e) => setFormData({ ...formData, isSeasonal: e.target.checked })}
+                                    className="w-4 h-4"
+                                />
+                                <span className="text-sm text-slate-700">Seasonal Design</span>
+                            </label>
+
+                            <button
+                                type="submit"
+                                className="w-full bg-pink-600 text-white py-3 rounded-lg hover:bg-pink-700"
+                            >
+                                {design ? 'Update Design' : 'Add Design'}
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            );
+        };
+
+        // Seasonal Config Form Component
+        const SeasonalConfigForm = ({ seasonalConfig, onConfigUpdate }) => {
+            const [config, setConfig] = useState(seasonalConfig);
+
+            const handleSubmit = async (e) => {
+                e.preventDefault();
+                await DB.saveSeasonalConfig(config);
+                onConfigUpdate(config);
+            };
+
+            return (
+                <form onSubmit={handleSubmit} className="bg-white rounded-xl p-6 mb-6 shadow-lg">
+                    <h3 className="text-xl font-bold text-slate-800 mb-4">Seasonal Collection</h3>
+                    <div className="space-y-4">
+                        <label className="flex items-center gap-2">
+                            <input
+                                type="checkbox"
+                                checked={config.isActive}
+                                onChange={(e) => setConfig({ ...config, isActive: e.target.checked })}
+                                className="w-4 h-4"
+                            />
+                            <span className="text-sm text-slate-700">Enable Seasonal Collection</span>
+                        </label>
+
+                        <input
+                            type="text"
+                            placeholder="Event Name (e.g., Valentine's Day Collection)"
+                            value={config.eventName}
+                            onChange={(e) => setConfig({ ...config, eventName: e.target.value })}
+                            className="w-full px-4 py-2 border rounded-lg"
+                        />
+
+                        <button
+                            type="submit"
+                            className="px-6 py-2 bg-slate-800 text-white rounded-lg hover:bg-slate-900"
+                        >
+                            Save Configuration
+                        </button>
+                    </div>
+                </form>
+            );
+        };
+
+        // Main App Component
+        const App = () => {
+            const [view, setView] = useState('client');
+            const [designs, setDesigns] = useState([]);
+            const [seasonalConfig, setSeasonalConfig] = useState({ isActive: false, eventName: '' });
+            const [loading, setLoading] = useState(true);
+            const [password, setPassword] = useState('');
+            const [loginError, setLoginError] = useState(false);
+            const [verifying, setVerifying] = useState(false);
+
+            useEffect(() => {
+                const fetchData = async () => {
+                    setLoading(true);
+                    const [fetchedDesigns, fetchedConfig] = await Promise.all([
+                        DB.getDesigns(),
+                        DB.getSeasonalConfig()
+                    ]);
+                    setDesigns(fetchedDesigns);
+                    setSeasonalConfig(fetchedConfig);
+                    setLoading(false);
+                };
+                fetchData();
+            }, []);
+
+            const handleLogin = async (e) => {
+                e.preventDefault();
+                setVerifying(true);
+                const isValid = await DB.checkLogin(password);
+                setVerifying(false);
+
+                if (isValid) {
+                    setView('admin');
+                    setPassword('');
+                    setLoginError(false);
+                } else {
+                    setLoginError(true);
+                }
+            };
+
+            if (loading) {
+                return (
+                    <div className="min-h-screen flex items-center justify-center bg-rose-50">
+                        <Loader2 className="w-8 h-8 text-pink-600" />
+                    </div>
+                );
+            }
+
+            return (
+                <div className="min-h-screen bg-rose-50/30">
+                    <Header 
+                        onAdminClick={() => setView(view === 'admin' ? 'client' : 'login')} 
+                        onHomeClick={() => setView('client')}
+                    />
+
+                    {view === 'client' && (
+                        <ClientView designs={designs} seasonalConfig={seasonalConfig} />
+                    )}
+
+                    {view === 'login' && (
+                        <div className="min-h-screen flex items-center justify-center px-4">
+                            <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-sm animate-fade-in-up">
+                                <div className="text-center mb-6">
+                                    <div className="bg-pink-100 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3">
+                                        <Lock className="w-6 h-6 text-pink-600" />
+                                    </div>
+                                    <h2 className="text-2xl font-serif font-bold text-slate-800">Artist Access</h2>
+                                    <p className="text-slate-500 text-sm">Please enter staff password</p>
+                                </div>
+                                
+                                <form onSubmit={handleLogin} className="space-y-4">
+                                    <input 
+                                        type="password"
+                                        value={password}
+                                        onChange={(e) => setPassword(e.target.value)}
+                                        className="w-full px-4 py-3 rounded-lg border border-slate-200 focus:ring-2 focus:ring-pink-500/20 outline-none"
+                                        placeholder="Password"
+                                        autoFocus
+                                    />
+                                    {loginError && <p className="text-red-500 text-xs text-center">Incorrect password</p>}
+                                    
+                                    <button 
+                                        type="submit" 
+                                        disabled={verifying}
+                                        className="w-full bg-slate-900 text-white font-bold py-3 rounded-lg hover:bg-slate-800 transition-colors flex justify-center items-center"
+                                    >
+                                        {verifying ? <Loader2 className="w-5 h-5" /> : "Login"}
+                                    </button>
+                                </form>
+                                <button 
+                                    onClick={() => setView('client')}
+                                    className="w-full mt-4 text-slate-400 text-sm hover:text-slate-600"
+                                >
+                                    Back to Gallery
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
+                    {view === 'admin' && (
+                        <AdminView 
+                            onLogout={() => setView('client')}
+                            onDesignAdded={(design) => setDesigns(prev => [design, ...prev])}
+                            onDesignUpdated={(design) => setDesigns(prev => prev.map(d => d.id === design.id ? design : d))}
+                            onDesignDeleted={(id) => setDesigns(prev => prev.filter(d => d.id !== id))}
+                            designs={designs}
+                            seasonalConfig={seasonalConfig}
+                            onConfigUpdate={setSeasonalConfig}
+                        />
+                    )}
+                </div>
+            );
+        };
+
+        // Render the app
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
