@@ -251,6 +251,11 @@
             const [selectedService, setSelectedService] = useState('');
             const [selectedStyle, setSelectedStyle] = useState('');
 
+
+            const TOTAL_IMAGES = 50; 
+            const IMAGE_BASE_URL = "https://meet-167.github.io/Ombre/images/";
+
+            
             const filteredDesigns = designs.filter(design => {
                 const matchesSearch = design.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                     design.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
