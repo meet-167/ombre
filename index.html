@@ -1,0 +1,52 @@
+// Database Service using Firestore
+        const DB = {
+            checkLogin: async (password) => {
+                try {
+                    const docRef = db.collection('credentials').doc('password');
+                    const doc = await docRef.get();
+                    if (doc.exists) {
+                        const storedPassword = doc.data().password;
+                        return password === storedPassword;
+                    }
+                    console.error('Password document does not exist');
+                    return false;
+                } catch (error) {
+                    console.error('Error checking password:', error);
+                    alert('Error checking password. Check console for details.');
+                    return false;
+                }
+            },
+
+            getDesigns: async () => {
+                try {
+                    const snapshot = await db.collection('designs').orderBy('createdAt', 'desc').get();
+                    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                } catch (error) {
+                    console.error('Error getting designs:', error);
+                    alert('Error loading designs. Check Firestore rules.');
+                    return [];
+                }
+            },
+
+            getAvailableImages: async () => {
+                try {
+                    const docRef = db.collection('config').doc('imageList');
+                    const doc = await docRef.get();
+                    if (doc.exists) {
+                        return doc.data().images || [];
+                    }
+                    return [];
+                } catch (error) {
+                    console.error('Error getting image list:', error);
+                    return [];
+                }
+            },
+
+            saveImageList: async (images) => {
+                try {
+                    await db.collection('config').doc('imageList').set({ images });
+                } catch (error) {
+                    console.error('Error saving image list:', error);
+                    throw error;
+                }
+            },
