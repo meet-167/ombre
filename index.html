@@ -226,6 +226,17 @@
             "Ombre", "French", "Glitter", "Matte", "3D Art", "Minimalist", "Chrome", "Abstract", "Floral"
         ];
 
+        // Helper: auto-generate image list from repo
+        const getAllRepoImages = (total = 50) => {
+            const base = "https://meet-167.github.io/Ombre/images/";
+            const arr = [];
+            for (let i = 1; i <= total; i++) {
+                arr.push(`${base}img${i}.jpg`);
+            }
+            return arr;
+        };
+
+        
         // Header Component
         const Header = ({ onAdminClick, onHomeClick }) => (
             <header className="bg-white shadow-sm sticky top-0 z-50">
