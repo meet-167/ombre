@@ -255,7 +255,16 @@
             const TOTAL_IMAGES = 50; 
             const IMAGE_BASE_URL = "https://meet-167.github.io/Ombre/images/";
 
-            
+            // Helper: auto-generate image list from repo
+const getAllRepoImages = (total = 50) => {
+    const base = "https://meet-167.github.io/Ombre/images/";
+    const arr = [];
+    for (let i = 1; i <= total; i++) {
+        arr.push(`${base}img${i}.jpg`);
+    }
+    return arr;
+};
+
             const filteredDesigns = designs.filter(design => {
                 const matchesSearch = design.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                     design.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
@@ -504,7 +513,7 @@
         tags: [],
         isSeasonal: false
     });
-
+    
     // Generate list of available images (filtering out those already used)
     const usedImages = allDesigns
         .filter(d => d.id !== design?.id) // Don't filter out the current design's image if editing
@@ -539,7 +548,13 @@
             alert('Error saving design: ' + error.message);
         }
     };
+            
+    const allImages = getAllRepoImages(50); // change number if you add more later
+const usedImages = designs.map(d => d.imageUrl);
+const availableImages = allImages.filter(img => !usedImages.includes(img));
 
+// selection state
+const [selectedImage, setSelectedImage] = useState(design?.imageUrl || "");
     const toggleTag = (tag) => {
         setFormData(prev => ({
             ...prev,
