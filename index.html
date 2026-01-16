@@ -74,7 +74,7 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
         const TOTAL_IMAGES = 50; 
-        const IMAGE_BASE_URL = "https://meet-167.github.io/Ombre/images/";
+        const IMAGE_BASE_URL = "https://meet-167.github.io/ombre/images/";
         // Lucide Icons as SVG components
         const Sparkles = ({ className = "w-6 h-6" }) => (
             <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -229,7 +229,7 @@
 
         // Helper: auto-generate image list from repo
         const getAllRepoImages = (total = 50) => {
-            const base = "https://meet-167.github.io/Ombre/images/";
+            const base = "https://meet-167.github.io/ombre/images/";
             const arr = [];
             for (let i = 1; i <= total; i++) {
                 arr.push(`${base}img${i}.png`);
