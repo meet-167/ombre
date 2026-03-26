@@ -12,34 +12,33 @@
             if (typeof arguments[0] === 'string' && arguments[0].includes('cdn.tailwindcss.com')) return;
             originalWarn.apply(console, arguments);
         };
-
-        // Tailwind Config must be defined BEFORE the CDN script
-        window.tailwind = {
-            config: {
-                theme: {
-                    extend: {
-                        colors: {
-                            blush: {
-                                50: '#fdf8f5',
-                                100: '#f5ebe6',
-                                200: '#eddccc',
-                                500: '#c58a8a',
-                                600: '#a95c68',
-                                900: '#4a252a',
-                            },
-                            champagne: '#e5d3b3',
-                            charcoal: '#2d2b2a'
+    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // Set up the premium aesthetic colors
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        blush: {
+                            50: '#fdf8f5',
+                            100: '#f5ebe6',
+                            200: '#eddccc',
+                            500: '#c58a8a',
+                            600: '#a95c68',
+                            900: '#4a252a',
                         },
-                        fontFamily: {
-                            sans: ['Lato', 'sans-serif'],
-                            serif: ['Playfair Display', 'serif'],
-                        }
+                        champagne: '#e5d3b3',
+                        charcoal: '#2d2b2a'
+                    },
+                    fontFamily: {
+                        sans: ['Lato', 'sans-serif'],
+                        serif: ['Playfair Display', 'serif'],
                     }
                 }
             }
         };
     </script>
-    <script src="https://cdn.tailwindcss.com"></script>
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
