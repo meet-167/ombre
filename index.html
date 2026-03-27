@@ -1004,10 +1004,10 @@
                         DB.getSeasonalConfig()
                     ]);
 
-                    // Normalize all legacy database designs to use the local /img/ file structure dynamically without overriding their db value
+                    // Normalize all legacy database designs to use the requested external GitHub /img/ path
                     const mappedDesigns = fetchedDesigns.map((d) => {
                         const match = d?.imageUrl?.match(/img\d+/);
-                        return match ? { ...d, imageUrl: `/img/${match[0]}.jpg` } : d;
+                        return match ? { ...d, imageUrl: `https://meet-167.github.io/ombre/img/${match[0]}.jpg` } : d;
                     });
 
                     setDesigns(mappedDesigns);
