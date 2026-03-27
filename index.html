@@ -173,7 +173,7 @@
 
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
-        const TOTAL_IMAGES = 50;
+        const TOTAL_IMAGES = 32;
         const IMAGE_BASE_URL = "/img";
         // Lucide Icons as SVG components
         const Sparkles = ({ className = "w-6 h-6" }) => (
@@ -1003,7 +1003,14 @@
                         DB.getDesigns(),
                         DB.getSeasonalConfig()
                     ]);
-                    setDesigns(fetchedDesigns);
+                    
+                    // Normalize all legacy database designs to use the local /img/ file structure dynamically without overriding their db value
+                    const mappedDesigns = fetchedDesigns.map((d) => {
+                        const match = d?.imageUrl?.match(/img\d+/);
+                        return match ? { ...d, imageUrl: `/img/${match[0]}.jpg` } : d;
+                    });
+
+                    setDesigns(mappedDesigns);
                     setSeasonalConfig(fetchedConfig);
                     setLoading(false);
                 };
@@ -1025,32 +1032,7 @@
                 }
             };
 
-            // Generate full display list for ClientView by merging db designs with repo images
-            const displayDesigns = React.useMemo(() => {
-                const allUrls = getAllRepoImages(TOTAL_IMAGES);
-                const dbMap = new Map();
-                designs.forEach(d => {
-                    const match = d?.imageUrl?.match(/img\d+/);
-                    if (match) dbMap.set(match[0], d);
-                });
 
-                return allUrls.map((url, idx) => {
-                    const match = url.match(/img\d+/);
-                    if (match && dbMap.has(match[0])) {
-                        return { ...dbMap.get(match[0]), imageUrl: url };
-                    }
-                    return {
-                        id: `auto-${idx}`,
-                        title: `Signature Design ${idx + 1}`,
-                        price: 999,
-                        imageUrl: url,
-                        category: 'Gel Art',
-                        color: '',
-                        tags: ['Exclusive'],
-                        isSeasonal: false
-                    };
-                });
-            }, [designs]);
 
             if (loading) {
                 return (
@@ -1068,7 +1050,7 @@
                     />
 
                     {view === 'client' && (
-                        <ClientView designs={displayDesigns} seasonalConfig={seasonalConfig} />
+                        <ClientView designs={designs} seasonalConfig={seasonalConfig} />
                     )}
 
                     {view === 'login' && (
