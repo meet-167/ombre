@@ -1020,20 +1020,12 @@
                 }
             };
 
-            if (loading) {
-                return (
-                    <div className="min-h-screen flex items-center justify-center bg-blackbg">
-                        <Loader2 className="w-8 h-8 text-gold-500" />
-                    </div>
-                );
-            }
-
             // Generate full display list for ClientView by merging db designs with repo images
             const displayDesigns = React.useMemo(() => {
                 const allUrls = getAllRepoImages(TOTAL_IMAGES);
                 const dbMap = new Map();
                 designs.forEach(d => {
-                    const match = d.imageUrl.match(/img\d+/);
+                    const match = d?.imageUrl?.match(/img\d+/);
                     if (match) dbMap.set(match[0], d);
                 });
 
@@ -1054,6 +1046,14 @@
                     };
                 });
             }, [designs]);
+
+            if (loading) {
+                return (
+                    <div className="min-h-screen flex items-center justify-center bg-blackbg">
+                        <Loader2 className="w-8 h-8 text-gold-500" />
+                    </div>
+                );
+            }
 
             return (
                 <div className="min-h-screen bg-blackbg relative">
